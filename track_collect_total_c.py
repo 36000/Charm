@@ -46,6 +46,11 @@ histo_bg_collector = []
 histo_c_collector = []
 bin_collector = []
 
+
+fig = plt.figure(0, figsize=(35,35))
+fig.suptitle('ROC curves for jet level variables', fontsize=80, weight='roman')
+fig.subplots_adjust(hspace=0.4, wspace=0.4)
+
 #histogram for each variable k
 for k in range(high_sig_collect.shape[2]):
 
@@ -76,6 +81,8 @@ for k in range(high_sig_collect.shape[2]):
     hist_c, bins = np.histogram(c, normed=True, bins=bins)
     hist_bg, bins = np.histogram(bg, normed=True, bins=bins)
     
+    #normal plots
+    plt.figure(1)
     pltBg = plt.plot(bins[:-1], hist_bg, drawstyle='steps-post', color='0.2', label='bg')
     pltC = plt.plot(bins[:-1], hist_c, drawstyle='steps-post', color='blue', label='charm')
     pltSig = plt.plot(bins[:-1], hist_sig, drawstyle='steps-post', color='red', label='bottom')
@@ -85,13 +92,84 @@ for k in range(high_sig_collect.shape[2]):
     plt.legend(loc='upper right')
     plt.savefig('h'+str(k)+'.png')
     plt.clf()
+    
+    #ROC
+    tpr = []
+    fpr = []
+    tprc = []
+    fprc = []
 
-histo_sig_collector = np.asarray(histo_sig_collector)
-histo_c_collector = np.asarray(histo_c_collector)
-histo_bg_collector = np.asarray(histo_bg_collector)
-bin_collector = np.asarray(bin_collector)
+    sigFreqSum = np.sum(hist_sig)
+    cFreqSum = np.sum(hist_c)
+    bgFreqSum = np.sum(hist_bg)
+    
+    for j in range(hist_sig.shape[0]): # looping each histo_sig
+        if high_var[k] in ['jet_prob', 'delta_r_vertex']:
+            TP = np.sum(hist_sig[0:j+1])
+            FN = np.sum(hist_bg[0:j+1])
+            tpr.append(TP / float(sigFreqSum))
+            fpr.append(FN / float(bgFreqSum))
+        else:    # flip symmetry along dash line in ROC
+            TP = np.sum(hist_sig[j:])
+            FN = np.sum(hist_bg[j:])
+            tpr.append(TP / float(sigFreqSum))
+            fpr.append(FN / float(bgFreqSum))
+            
+    for j in range(hist_c.shape[0]): # looping each histo_sig
+        if high_var[k] in ['jet_prob', 'delta_r_vertex']:
+            TP = np.sum(hist_c[0:j+1])
+            FN = np.sum(hist_bg[0:j+1])
+            tprc.append(TP / float(cFreqSum))
+            fprc.append(FN / float(bgFreqSum))
+        else:    # flip symmetry along dash line in ROC
+            TP = np.sum(hist_c[j:])
+            FN = np.sum(hist_bg[j:])
+            tprc.append(TP / float(cFreqSum))
+            fprc.append(FN / float(bgFreqSum))
 
-np.savetxt("histo_sig_collector.csv", histo_sig_collector, delimiter=',')
-np.savetxt("histo_c_collector.csv", histo_c_collector, delimiter=',')
-np.savetxt("histo_bg_collector.csv", histo_bg_collector, delimiter=',')
-np.savetxt("bin_collector.csv", bin_collector, delimiter=',')
+    if high_var[k] in ['jet_prob', 'delta_r_vertex']:
+        tpr = [0.0] + tpr
+        fpr = [0.0] + fpr
+        tprc = [0.0] + tprc
+        fprc = [0.0] + fprc
+
+    tpr, fpr, tprc, fprc = np.asarray(tpr), np.asarray(fpr), np.asarray(tprc), np.asarray(fprc)
+    
+    #AUC
+    ufpr = np.unique(fpr)
+    utpr = []
+    for i in range(len(ufpr)):
+        ind = np.where(fpr == ufpr[i])
+        utpr.append(np.max(tpr[ind]))
+
+    utpr = np.asarray(utpr)
+    
+    AUCb = np.trapz(utpr, x=ufpr)
+    st_AUCb = "AUC = " + str('%.2f' % round(AUCb, 2))
+    
+    ufprc = np.unique(fprc)
+    utprc = []
+    for i in range(len(ufprc)):
+        ind = np.where(fprc == ufprc[i])
+        utprc.append(np.max(tprc[ind]))
+
+    utprc = np.asarray(utprc)
+
+    AUCc = np.trapz(utprc, x=ufprc)
+    st_AUCc = "AUC = " + str('%.2f' % round(AUCc, 2))
+    
+    plt.figure(0)
+    ax = fig.add_subplot(4,4,k+1)
+    ax.plot(fprc, tprc, linewidth=2, color='blue', lw=2)   #drawstyle='steps-post'
+    ax.plot(fpr, tpr, linewidth=2, color='red', lw=2)   #drawstyle='steps-post'
+    ax.plot([0,1],[0,1], color='0.2', lw=1.5)
+    ax.set_xlim([0,1])
+    ax.set_ylim([0,1])
+    ax.text(0.55,0.15, st_AUCb, fontsize=23, weight=550)
+    ax.text(0.55,0.05, st_AUCc, fontsize=23, weight=550)
+    ax.set_xlabel('false positive rate (fpr)', fontsize=27)
+    ax.set_ylabel('true positive rate (tpr)', fontsize=27)
+    ax.set_title(high_var[k], fontsize=30, weight=550)
+
+fig.savefig('High_Level_PR_Rev3'+'.png')
+
