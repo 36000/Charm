@@ -17,11 +17,21 @@ _binning = {0:[0,300], 1:[-3,3], 2:[0,2.5], 3:[0,5],
 8:[0,0.4], 9:[0,0.4], 10:[0,5], 11:[0,10], 
 12:[0,10], 13:[0,7], 14:[0,25], 15:[0,5]}
 
+high_var = ['jet_pt', 'jet_eta',
+'track_2_d0_significance', 'track_3_d0_significance',
+'track_2_z0_significance', 'track_3_z0_significance',
+'n_tracks_over_d0_threshold', 'jet_prob', 'jet_width_eta', 'jet_width_phi',
+'vertex_significance', 'n_secondary_vertices', 'n_secondary_vertex_tracks',
+'delta_r_vertex', 'vertex_mass', 'vertex_energy_fraction']
+
 import numpy as np
 import h5py
+import matplotlib.pyplot as plt
 
-filepath = '/phys/groups/tev/scratch1/users/jk232/'
-f = h5py.File(filepath+'gjj_Variables.hdf5', 'r')
+#filepath = '/phys/groups/tev/scratch1/users/jk232/'
+#f = h5py.File(filepath+'gjj_Variables.hdf5', 'r')
+
+f = h5py.File('../'+'gjj_Variables.hdf5', 'r')
 
 high = f['high_input'][0:10000000]
 y = f['y_input'][0:10000000]
@@ -56,17 +66,25 @@ for k in range(high_sig_collect.shape[2]):
         max_bg, min_bg = bg.max(), bg.min()
         max_c, min_c = c.max(), c.min()
         bin_max, bin_min = max(max_sig, max_bg, max_c), min(min_sig, min_bg, min_c)
-    bins = np.linspace(bin_min, bin_max, 101)
+    if k == 6 or  k == 11 or  k == 12:
+        bins = np.linspace(bin_min, bin_max, 11)
+    else:
+        bins = np.linspace(bin_min, bin_max, 101)
 
     #histogram
     hist_sig, bins = np.histogram(sig, normed=True, bins=bins)
     hist_c, bins = np.histogram(c, normed=True, bins=bins)
     hist_bg, bins = np.histogram(bg, normed=True, bins=bins)
     
-    histo_sig_collector.append(hist_sig)
-    histo_c_collector.append(hist_c)
-    histo_bg_collector.append(hist_bg)
-    bin_collector.append(bins)
+    pltBg = plt.plot(bins[:-1], hist_bg, drawstyle='steps-post', color='0.2', label='bg')
+    pltC = plt.plot(bins[:-1], hist_c, drawstyle='steps-post', color='blue', label='charm')
+    pltSig = plt.plot(bins[:-1], hist_sig, drawstyle='steps-post', color='red', label='bottom')
+    if k != 1:
+        plt.yscale('log')
+    plt.title(high_var[k])
+    plt.legend(loc='upper right')
+    plt.savefig('h'+str(k)+'.png')
+    plt.clf()
 
 histo_sig_collector = np.asarray(histo_sig_collector)
 histo_c_collector = np.asarray(histo_c_collector)
