@@ -106,30 +106,31 @@ for k in range(high_sig_collect.shape[2]):
     for j in range(hist_sig.shape[0]): # looping each histo_sig
         if high_var[k] in ['jet_prob', 'delta_r_vertex']:
             TP = np.sum(hist_sig[0:j+1])
-            FN = np.sum(hist_bg[0:j+1])
+            FN = np.sum(hist_bg[0:j+1] + hist_c[0:j+1])
             tpr.append(TP / float(sigFreqSum))
-            fpr.append(FN / float(bgFreqSum))
+            fpr.append(FN / float(bgFreqSum + cFreqSum))
         else:    # flip symmetry along dash line in ROC
             TP = np.sum(hist_sig[j:])
-            FN = np.sum(hist_bg[j:])
+            FN = np.sum(hist_bg[j:] + hist_c[j:])
             tpr.append(TP / float(sigFreqSum))
-            fpr.append(FN / float(bgFreqSum))
+            fpr.append(FN / float(bgFreqSum + cFreqSum))
             
     for j in range(hist_c.shape[0]): # looping each histo_sig
-        if high_var[k] in ['jet_prob', 'delta_r_vertex']:
+        if high_var[k] not in ['jet_prob', 'vertex_energy_fraction']:
             TP = np.sum(hist_c[0:j+1])
-            FN = np.sum(hist_bg[0:j+1])
+            FN = np.sum(hist_bg[0:j+1]+hist_sig[0:j+1])
             tprc.append(TP / float(cFreqSum))
-            fprc.append(FN / float(bgFreqSum))
+            fprc.append(FN / float(bgFreqSum + sigFreqSum))
         else:    # flip symmetry along dash line in ROC
             TP = np.sum(hist_c[j:])
-            FN = np.sum(hist_bg[j:])
+            FN = np.sum(hist_bg[j:] + hist_sig[j:])
             tprc.append(TP / float(cFreqSum))
-            fprc.append(FN / float(bgFreqSum))
+            fprc.append(FN / float(bgFreqSum + sigFreqSum))
 
     if high_var[k] in ['jet_prob', 'delta_r_vertex']:
         tpr = [0.0] + tpr
         fpr = [0.0] + fpr
+    if high_var[k] not in ['jet_prob', 'vertex_energy_fraction']:
         tprc = [0.0] + tprc
         fprc = [0.0] + fprc
 
@@ -160,15 +161,16 @@ for k in range(high_sig_collect.shape[2]):
     
     plt.figure(0)
     ax = fig.add_subplot(4,4,k+1)
-    ax.plot(fprc, tprc, linewidth=2, color='blue', lw=2)   #drawstyle='steps-post'
-    ax.plot(fpr, tpr, linewidth=2, color='red', lw=2)   #drawstyle='steps-post'
-    ax.plot([0,1],[0,1], color='0.2', lw=1.5)
+    ax.plot([0,1],[0,1], color='0.2', lw=1.5, label='bg')
+    ax.plot(fprc, tprc, linewidth=2, color='blue', lw=2, label='charm')   #drawstyle='steps-post'
+    ax.plot(fpr, tpr, linewidth=2, color='red', lw=2, label='bottom')   #drawstyle='steps-post'
     ax.set_xlim([0,1])
     ax.set_ylim([0,1])
     ax.text(0.55,0.15, st_AUCb, fontsize=23, weight=550)
     ax.text(0.55,0.05, st_AUCc, fontsize=23, weight=550)
     ax.set_xlabel('false positive rate (fpr)', fontsize=27)
     ax.set_ylabel('true positive rate (tpr)', fontsize=27)
+    ax.legend(loc=7, fontsize = 'large') #mid right
     ax.set_title(high_var[k], fontsize=30, weight=550)
 
 fig.savefig('High_Level_PR_Rev3'+'.png')
