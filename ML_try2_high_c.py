@@ -3,8 +3,8 @@ import numpy as np
 import time
 
 start = time.time()
-filepath = '/phys/groups/tev/scratch1/users/jk232/'
-f = h5py.File(filepath+'gjj_Variables.hdf5', 'r')
+#filepath = '/phys/groups/tev/scratch1/users/jk232/'
+f = h5py.File("../"+'gjj_Variables.hdf5', 'r')
 
 '''#for testing
 f = h5py.File(filepath+'mygjj_Variables.hdf5', 'r')'''
