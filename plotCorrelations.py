@@ -4,7 +4,7 @@ from pandas import DataFrame
 import h5py
 
 
-f = h5py.File('gjj_Variables.hdf5', 'r')
+f = h5py.File('../' + 'gjj_Variables.hdf5', 'r')
 
 high = f['high_input'][0:10000000]
 highdf = DataFrame(high[:, 0, :])
@@ -24,4 +24,4 @@ plt.xticks(range(len(high_var)), high_var, fontsize=10, rotation='vertical')
 plt.yticks(range(len(high_var)), high_var, fontsize=10)
 fig.colorbar(cax)
 plt.tight_layout()
-plt.show()
+plt.savefig('Expert_Correlations.png')
