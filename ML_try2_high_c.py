@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import time
+import resource
 
 start = time.time()
 #filepath = '/phys/groups/tev/scratch1/users/jk232/'
@@ -108,6 +109,10 @@ y_hat = model.predict(X_test, batch_size=128)
 print("y_hat.shape", y_hat.shape)
 print("y_hat", y_hat[0:10])
 
+end = time.time()
+
+print 'algorithm time ', (end - start)
+print 'memory usage', resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 
 '''ROC Curve (Recall)
 True Positive Rate (tpr) = TP / P = TP / (TP + FN)
