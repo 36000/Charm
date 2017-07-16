@@ -4,7 +4,7 @@ from pandas import DataFrame
 import h5py
 
 
-f = h5py.File('../' + 'gjj_Variables.hdf5', 'r')
+f = h5py.File('../gjj_Variables.hdf5', 'r')
 
 high = f['high_input'][0:10000000]
 highdf = DataFrame(high[:, 0, :])
